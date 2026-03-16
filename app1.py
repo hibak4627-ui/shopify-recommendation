@@ -31,7 +31,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS events (
         id SERIAL PRIMARY KEY,
         customer_id TEXT,
-        event_type TEXT,   -- type d'événement (order, cart, checkout, customer_update, search, click)
+        event_type TEXT,
         product_id TEXT,
         query TEXT,
         event_data JSONB,
@@ -67,18 +67,14 @@ def orders_create():
     save_event(data.get("customer", {}).get("id"), "order", None, None, data)
     return "Commande reçue", 200
 
-@app.route("/customers/update", methods=["POST"])
-def customers_update():
+@app.route("/carts/update", methods=["POST"])
+def carts_update():
     data = request.json
-    print("DEBUG DATA:", data)  # Railway Logs
-    try:
-        customer_id = data.get("id") or data.get("customer", {}).get("id")
-        print("DEBUG CUSTOMER_ID:", customer_id)
-        save_event(customer_id, "customer_update", None, None, data)
-        return "Client mis à jour", 200
-    except Exception as e:
-        print("ERROR in customers_update:", str(e))
-        return jsonify({"status": "error", "message": str(e)}), 500
+    product_id = None
+    if "line_items" in data and len(data["line_items"]) > 0:
+        product_id = data["line_items"][0].get("product_id")
+    save_event(data.get("customer_id"), "cart", product_id, None, data)
+    return "Panier mis à jour", 200
 
 @app.route("/checkouts/create", methods=["POST"])
 def checkouts_create():
@@ -89,7 +85,7 @@ def checkouts_create():
 @app.route("/customers/update", methods=["POST"])
 def customers_update():
     data = request.json
-    print("DEBUG DATA:", data)  # يظهر فـ Railway Logs
+    print("DEBUG DATA:", data)  # Railway Logs
     try:
         customer_id = data.get("id") or data.get("customer", {}).get("id")
         print("DEBUG CUSTOMER_ID:", customer_id)
