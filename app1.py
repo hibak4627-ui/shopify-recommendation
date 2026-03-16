@@ -16,7 +16,9 @@ app = Flask(__name__)
 # Connexion PostgreSQL (Railway fournit DATABASE_URL)
 # -------------------------
 def get_conn():
-    return psycopg2.connect(os.environ["DATABASE_URL"])
+    db_url = os.environ.get("DATABASE_URL")
+    return psycopg2.connect(db_url)
+
 
 def init_db():
     conn = get_conn()
