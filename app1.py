@@ -85,9 +85,15 @@ def checkouts_create():
 @app.route("/customers/update", methods=["POST"])
 def customers_update():
     data = request.json
-    print("DEBUG DATA:", data)  # Railway Logs
-    save_event(data.get("id"), "customer_update", None, None, data)
-    return "Client mis à jour", 200
+    print("DEBUG DATA:", data)  # يظهر فـ Railway Logs
+    try:
+        customer_id = data.get("id") or data.get("customer", {}).get("id")
+        print("DEBUG CUSTOMER_ID:", customer_id)
+        save_event(customer_id, "customer_update", None, None, data)
+        return "Client mis à jour", 200
+    except Exception as e:
+        print("ERROR in customers_update:", str(e))
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 # -------------------------
 # Endpoints personnalisés (search & click)
