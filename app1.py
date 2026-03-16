@@ -67,14 +67,18 @@ def orders_create():
     save_event(data.get("customer", {}).get("id"), "order", None, None, data)
     return "Commande reçue", 200
 
-@app.route("/carts/update", methods=["POST"])
-def carts_update():
+@app.route("/customers/update", methods=["POST"])
+def customers_update():
     data = request.json
-    product_id = None
-    if "line_items" in data and len(data["line_items"]) > 0:
-        product_id = data["line_items"][0].get("product_id")
-    save_event(data.get("customer_id"), "cart", product_id, None, data)
-    return "Panier mis à jour", 200
+    print("DEBUG DATA:", data)  # Railway Logs
+    try:
+        customer_id = data.get("id") or data.get("customer", {}).get("id")
+        print("DEBUG CUSTOMER_ID:", customer_id)
+        save_event(customer_id, "customer_update", None, None, data)
+        return "Client mis à jour", 200
+    except Exception as e:
+        print("ERROR in customers_update:", str(e))
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/checkouts/create", methods=["POST"])
 def checkouts_create():
