@@ -17,7 +17,6 @@ app = Flask(__name__)
 def get_conn():
     db_url = os.environ.get("DATABASE_URL")
     # Vérification de la valeur dans les logs
-    import os
     print("DATABASE_URL =", os.environ.get("DATABASE_URL"))
     if not db_url:
         raise Exception("DATABASE_URL n'est pas défini dans l'environnement")
