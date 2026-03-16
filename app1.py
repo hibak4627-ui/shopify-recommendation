@@ -9,7 +9,7 @@ import psycopg2
 import json
 from flask import Flask, request, jsonify
 
-app1 = Flask(__name__)
+app = Flask(__name__)
 
 # -------------------------
 # Connexion à PostgreSQL (Railway fournit DATABASE_URL)
