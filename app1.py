@@ -86,7 +86,7 @@ def checkouts_create():
 def customers_update():
     data = request.json
     print("DEBUG DATA:", data)  # Railway Logs
-    save_event(data.get("customer", {}).get("id"), "customer_update", None, None, data)
+    save_event(data.get("id"), "customer_update", None, None, data)
     return "Client mis à jour", 200
 
 # -------------------------
