@@ -17,7 +17,8 @@ app = Flask(__name__)
 def get_conn():
     db_url = os.environ.get("DATABASE_URL")
     # Vérification de la valeur dans les logs
-    print("DATABASE_URL =", db_url)
+     import os
+    print("DATABASE_URL =", os.environ.get("DATABASE_URL"))
     if not db_url:
         raise Exception("DATABASE_URL n'est pas défini dans l'environnement")
     return psycopg2.connect(db_url)
