@@ -102,6 +102,13 @@ def track_click():
     data = request.json
     save_event(data.get("customer_id"), "click", data.get("product_id"), None, data)
     return "Clic enregistré", 200
+    
+@app.route("/customers/update", methods=["POST"])
+def customers_update():
+    data = request.json
+    print("DEBUG DATA:", data)  #Railway Logs
+    save_event(data.get("customer", {}).get("id"), "customer_update", None, None, data)
+    return "Client mis à jour", 200
 
 # -------------------------
 # Endpoint de recommandations simples
