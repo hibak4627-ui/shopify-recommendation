@@ -4,7 +4,6 @@ Created on Sun Mar 15 03:25:00 2026
 
 @author: HP
 """
-
 import os
 import psycopg2
 import json
@@ -13,13 +12,19 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # -------------------------
-# Connexion PostgreSQL (Railway fournit DATABASE_URL)
+# Connexion à PostgreSQL (Railway fournit DATABASE_URL)
 # -------------------------
 def get_conn():
     db_url = os.environ.get("DATABASE_URL")
+    # ✅ Vérification de la valeur dans les logs
+    print("DATABASE_URL =", db_url)
+    if not db_url:
+        raise Exception("DATABASE_URL n'est pas défini dans l'environnement")
     return psycopg2.connect(db_url)
 
-
+# -------------------------
+# Initialisation de la base de données
+# -------------------------
 def init_db():
     conn = get_conn()
     cursor = conn.cursor()
