@@ -16,7 +16,6 @@ app = Flask(__name__)
 # -------------------------
 def get_conn():
     db_url = os.environ.get("DATABASE_URL")
-    # Vérification de la valeur dans les logs
     print("DATABASE_URL =", os.environ.get("DATABASE_URL"))
     if not db_url:
         raise Exception("DATABASE_URL n'est pas défini dans l'environnement")
@@ -80,7 +79,7 @@ def carts_update():
 @app.route("/checkouts/create", methods=["POST"])
 def checkouts_create():
     data = request.json
-    save_event(data.get("customer_id"), "checkout", None, None, data)
+    save_event(data.get("customer", {}).get("id"), "checkout", None, None, data)
     return "Paiement créé", 200
 
 @app.route("/customers/update", methods=["POST"])
