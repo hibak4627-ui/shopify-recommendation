@@ -85,7 +85,7 @@ def checkouts_create():
 @app.route("/customers/update", methods=["POST"])
 def customers_update():
     data = request.json
-    save_event(data.get("id"), "customer_update", None, None, data)
+    save_event(data.get("customer", {}).get("id"), "customer_update", None, None, data)
     return "Client mis à jour", 200
 
 # -------------------------
