@@ -8,8 +8,10 @@ import os
 import psycopg2
 import json
 from flask import Flask, request, jsonify
+from flask_cors import CORS   # Import du module CORS
 
 app = Flask(__name__)
+CORS(app)  # Autoriser toutes les origines (utile pour Shopify)
 
 print("DEBUG: Flask app starting...")
 
@@ -30,6 +32,7 @@ def init_db():
     print("DEBUG: Initialisation DB...")
     conn = get_conn()
     cursor = conn.cursor()
+    # Création de la table des événements si elle n'existe pas
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS events (
         id SERIAL PRIMARY KEY,
@@ -52,9 +55,10 @@ init_db()
 # Fonction utilitaire pour sauvegarder les événements
 # -------------------------
 def save_event(customer_id, event_type, product_id, query, event_data):
-    print(f"DEBUG: save_event called with customer_id={customer_id}, event_type={event_type}")
+    print(f"DEBUG: save_event appelé avec customer_id={customer_id}, event_type={event_type}")
     conn = get_conn()
     cursor = conn.cursor()
+    # Insertion d'un nouvel événement dans la base
     cursor.execute("""
         INSERT INTO events (customer_id, event_type, product_id, query, event_data)
         VALUES (%s, %s, %s, %s, %s)
@@ -62,7 +66,7 @@ def save_event(customer_id, event_type, product_id, query, event_data):
     conn.commit()
     cursor.close()
     conn.close()
-    print("DEBUG: Event saved")
+    print("DEBUG: Event sauvegardé")
 
 # -------------------------
 # Webhooks Shopify
@@ -126,9 +130,10 @@ def track_click():
 # -------------------------
 @app.route("/recommendations/<customer_id>", methods=["GET"])
 def recommendations(customer_id):
-    print("DEBUG: /recommendations called for customer_id =", customer_id)
+    print("DEBUG: /recommendations appelé pour customer_id =", customer_id)
     conn = get_conn()
     cursor = conn.cursor()
+    # Sélection des produits les plus cliqués par ce client
     cursor.execute("""
         SELECT product_id, COUNT(*) as clicks
         FROM events
@@ -140,7 +145,7 @@ def recommendations(customer_id):
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    print("DEBUG: Recommendations result =", rows)
+    print("DEBUG: Résultat recommandations =", rows)
     return jsonify(rows)
 
 # -------------------------
@@ -148,5 +153,5 @@ def recommendations(customer_id):
 # -------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print(f"DEBUG: Starting Flask server on port {port}")
+    print(f"DEBUG: Démarrage du serveur Flask sur le port {port}")
     app.run(host="0.0.0.0", port=port)
