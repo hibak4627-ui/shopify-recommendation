@@ -6,19 +6,15 @@ Created on Sun Mar 15 03:25:00 2026
 """
 import os
 import psycopg2
-import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from psycopg2.extras import Json
 
 app = Flask(__name__)
-CORS(app)  # Autoriser toutes les origines (utile pour Shopify)
+CORS(app)
 
 print("DEBUG: Flask app starting...")
 
-# -------------------------
-# Ajouter les headers CORS après chaque réponse
-# -------------------------
 @app.after_request
 def add_cors_headers(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -26,19 +22,13 @@ def add_cors_headers(response):
     response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
     return response
 
-# -------------------------
-# Connexion à PostgreSQL (Railway fournit DATABASE_URL)
-# -------------------------
 def get_conn():
     db_url = os.environ.get("DATABASE_URL")
     print("DEBUG: DATABASE_URL =", db_url)
     if not db_url:
-        raise Exception("DATABASE_URL n'est pas défini dans l'environnement")
+        raise Exception("DATABASE_URL n'est pas défini")
     return psycopg2.connect(db_url)
 
-# -------------------------
-# Initialisation de la base de données
-# -------------------------
 def init_db():
     print("DEBUG: Initialisation DB...")
     conn = get_conn()
@@ -66,9 +56,6 @@ try:
 except Exception as e:
     print("ERROR init_db:", str(e))
 
-# -------------------------
-# Fonction utilitaire pour sauvegarder les événements
-# -------------------------
 def save_event(customer_id, event_type, product_id, query, event_data, page_url=None, referrer=None):
     print(f"DEBUG: save_event appelé avec customer_id={customer_id}, event_type={event_type}")
     try:
@@ -82,7 +69,7 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
             event_type,
             product_id,
             query,
-            Json(event_data),   # Conversion directe en JSONB
+            Json(event_data or {}),   # éviter None
             page_url,
             referrer
         ))
@@ -93,53 +80,10 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
     except Exception as e:
         print("ERROR in save_event:", str(e))
 
-# -------------------------
-# Webhooks Shopify
-# -------------------------
 @app.route("/ping", methods=["GET"])
 def ping():
     return "pong", 200
 
-@app.route("/orders/create", methods=["POST"])
-def orders_create():
-    data = request.json
-    print("DEBUG: /orders/create data =", data)
-    save_event(data.get("customer", {}).get("id"), "order", None, None, data)
-    return "Commande reçue", 200
-
-@app.route("/carts/update", methods=["POST"])
-def carts_update():
-    data = request.json
-    print("DEBUG: /carts/update data =", data)
-    product_id = None
-    if "line_items" in data and len(data["line_items"]) > 0:
-        product_id = data["line_items"][0].get("product_id")
-    save_event(data.get("customer_id"), "cart", product_id, None, data)
-    return "Panier mis à jour", 200
-
-@app.route("/checkouts/create", methods=["POST"])
-def checkouts_create():
-    data = request.json
-    print("DEBUG: /checkouts/create data =", data)
-    save_event(data.get("customer", {}).get("id"), "checkout", None, None, data)
-    return "Paiement créé", 200
-
-@app.route("/customers/update", methods=["POST"])
-def customers_update():
-    data = request.json
-    print("DEBUG: /customers/update data =", data)
-    try:
-        customer_id = data.get("id") or data.get("customer", {}).get("id")
-        print("DEBUG CUSTOMER_ID:", customer_id)
-        save_event(customer_id, "customer_update", None, None, data)
-        return "Client mis à jour", 200
-    except Exception as e:
-        print("ERROR in customers_update:", str(e))
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-# -------------------------
-# Actions personnalisées (search & click)
-# -------------------------
 @app.route("/events/search", methods=["POST"])
 def track_search():
     data = request.json
@@ -170,9 +114,6 @@ def track_click():
     )
     return "Clic enregistré", 200
 
-# -------------------------
-# Recommandations
-# -------------------------
 @app.route("/recommendations/<customer_id>", methods=["GET"])
 def recommendations(customer_id):
     print("DEBUG: /recommendations appelé pour customer_id =", customer_id)
@@ -192,9 +133,6 @@ def recommendations(customer_id):
     print("DEBUG: Résultat recommandations =", rows)
     return jsonify(rows)
 
-# -------------------------
-# Lancement du serveur
-# -------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     print(f"DEBUG: Démarrage du serveur Flask sur le port {port}")
