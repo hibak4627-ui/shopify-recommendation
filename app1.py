@@ -8,7 +8,8 @@ import os
 import psycopg2
 import json
 from flask import Flask, request, jsonify
-from flask_cors import CORS   # Import du module CORS
+from flask_cors import CORS 
+from psycopg2.extras import Json
 
 app = Flask(__name__)
 CORS(app)  # Autoriser toutes les origines (utile pour Shopify)
@@ -68,7 +69,7 @@ except Exception as e:
 # -------------------------
 # Fonction utilitaire pour sauvegarder les événements (version sécurisée)
 # -------------------------
-dfrom psycopg2.extras import Json
+
 
 def save_event(customer_id, event_type, product_id, query, event_data, page_url=None, referrer=None):
     print(f"DEBUG: save_event appelé avec customer_id={customer_id}, event_type={event_type}")
@@ -83,7 +84,7 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
             event_type,
             product_id,
             query,
-            Json(event_data),   # تحويل مباشر لـ JSONB
+            Json(event_data),   #ـ JSONB
             page_url,
             referrer
         ))
@@ -93,6 +94,7 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
         print("DEBUG: Event sauvegardé")
     except Exception as e:
         print("ERROR in save_event:", str(e))
+
 # Webhooks Shopify
 # -------------------------
 @app.route("/ping", methods=["GET"])
