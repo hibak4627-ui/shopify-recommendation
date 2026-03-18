@@ -68,20 +68,22 @@ except Exception as e:
 # -------------------------
 # Fonction utilitaire pour sauvegarder les événements (version sécurisée)
 # -------------------------
+dfrom psycopg2.extras import Json
+
 def save_event(customer_id, event_type, product_id, query, event_data, page_url=None, referrer=None):
     print(f"DEBUG: save_event appelé avec customer_id={customer_id}, event_type={event_type}")
     try:
         conn = get_conn()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO events (customer_id, event_type, product_id, query, event_data, page_url, referrer)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO events (customer_id, event_type, product_id, query, event_data, page_url, referrer, timestamp)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, DEFAULT)
         """, (
             customer_id,
             event_type,
             product_id,
             query,
-            json.dumps(event_data),  # JSON pur
+            Json(event_data),   # تحويل مباشر لـ JSONB
             page_url,
             referrer
         ))
@@ -91,7 +93,6 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
         print("DEBUG: Event sauvegardé")
     except Exception as e:
         print("ERROR in save_event:", str(e))
-# -------------------------
 # Webhooks Shopify
 # -------------------------
 @app.route("/ping", methods=["GET"])
