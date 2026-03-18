@@ -74,8 +74,8 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
         conn = get_conn()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO events (customer_id, event_type, product_id, query, event_data, page_url, referrer, timestamp)
-            VALUES (%s, %s, %s, %s, %s::jsonb, %s, %s, DEFAULT)
+            INSERT INTO events (customer_id, event_type, product_id, query, event_data, page_url, referrer)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (
             customer_id,
             event_type,
