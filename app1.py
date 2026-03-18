@@ -81,6 +81,9 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
 # -------------------------
 # Webhooks Shopify
 # -------------------------
+@app.route("/ping", methods=["GET"])
+def ping():
+    return "pong", 200
 @app.route("/orders/create", methods=["POST"])
 def orders_create():
     data = request.json
