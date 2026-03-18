@@ -75,7 +75,7 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO events (customer_id, event_type, product_id, query, event_data, page_url, referrer, timestamp)
-            VALUES (%s, %s, %s, %s, %s::jsonb, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s::jsonb, %s, %s, DEFAULT)
         """, (
             customer_id,
             event_type,
@@ -83,8 +83,7 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
             query,
             json.dumps(event_data),  # JSON pur
             page_url,
-            referrer,
-            None  # laisser DEFAULT
+            referrer
         ))
         conn.commit()
         cursor.close()
@@ -92,7 +91,6 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
         print("DEBUG: Event sauvegardé")
     except Exception as e:
         print("ERROR in save_event:", str(e))
-
 # -------------------------
 # Webhooks Shopify
 # -------------------------
