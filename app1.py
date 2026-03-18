@@ -60,23 +60,38 @@ def init_db():
     conn.close()
     print("DEBUG: DB initialisée")
 
-init_db()
+try:
+    init_db()
+except Exception as e:
+    print("ERROR init_db:", str(e))
 
 # -------------------------
-# Fonction utilitaire pour sauvegarder les événements
+# Fonction utilitaire pour sauvegarder les événements (version sécurisée)
 # -------------------------
 def save_event(customer_id, event_type, product_id, query, event_data, page_url=None, referrer=None, timestamp=None):
     print(f"DEBUG: save_event appelé avec customer_id={customer_id}, event_type={event_type}")
-    conn = get_conn()
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO events (customer_id, event_type, product_id, query, event_data, page_url, referrer, timestamp)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """, (customer_id, event_type, product_id, query, json.dumps(event_data), page_url, referrer, timestamp))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    print("DEBUG: Event sauvegardé")
+    try:
+        conn = get_conn()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO events (customer_id, event_type, product_id, query, event_data, page_url, referrer, timestamp)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            customer_id,
+            event_type,
+            product_id,
+            query,
+            json.dumps(event_data, default=str),
+            page_url,
+            referrer,
+            timestamp  # peut rester None pour utiliser DEFAULT
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("DEBUG: Event sauvegardé")
+    except Exception as e:
+        print("ERROR in save_event:", str(e))
 
 # -------------------------
 # Webhooks Shopify
@@ -84,6 +99,7 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
 @app.route("/ping", methods=["GET"])
 def ping():
     return "pong", 200
+
 @app.route("/orders/create", methods=["POST"])
 def orders_create():
     data = request.json
@@ -136,7 +152,7 @@ def track_search():
         data,
         page_url=data.get("page_url"),
         referrer=data.get("referrer"),
-        timestamp=data.get("timestamp")
+        timestamp=None  # laisser None pour éviter erreurs
     )
     return "Recherche enregistrée", 200
 
@@ -152,7 +168,7 @@ def track_click():
         data,
         page_url=data.get("page_url"),
         referrer=data.get("referrer"),
-        timestamp=data.get("timestamp")
+        timestamp=None  # laisser None
     )
     return "Clic enregistré", 200
 
