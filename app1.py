@@ -58,6 +58,7 @@ except Exception as e:
 
 def save_event(customer_id, event_type, product_id, query, event_data, page_url=None, referrer=None):
     print(f"DEBUG: save_event appelé avec customer_id={customer_id}, event_type={event_type}")
+    print("DEBUG event_data =", event_data)
     try:
         conn = get_conn()
         cursor = conn.cursor()
@@ -65,11 +66,11 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
             INSERT INTO events (customer_id, event_type, product_id, query, event_data, page_url, referrer, timestamp)
             VALUES (%s, %s, %s, %s, %s, %s, %s, DEFAULT)
         """, (
-            customer_id or "unknown",   # éviter None
-            event_type or "unknown",
+            customer_id if customer_id else "unknown",
+            event_type if event_type else "unknown",
             product_id,
             query,
-            Json(event_data or {}),     # éviter None
+            Json(event_data if event_data else {}),
             page_url,
             referrer
         ))
@@ -88,6 +89,7 @@ def ping():
 def track_search():
     data = request.json
     print("DEBUG: /events/search data =", data)
+    print("DEBUG: avant save_event")
     save_event(
         data.get("customer_id"),
         "search",
@@ -97,12 +99,14 @@ def track_search():
         page_url=data.get("page_url"),
         referrer=data.get("referrer")
     )
+    print("DEBUG: après save_event")
     return "Recherche enregistrée", 200
 
 @app.route("/events/click", methods=["POST"])
 def track_click():
     data = request.json
     print("DEBUG: /events/click data =", data)
+    print("DEBUG: avant save_event")
     save_event(
         data.get("customer_id"),
         "click",
@@ -112,6 +116,7 @@ def track_click():
         page_url=data.get("page_url"),
         referrer=data.get("referrer")
     )
+    print("DEBUG: après save_event")
     return "Clic enregistré", 200
 
 @app.route("/recommendations/<customer_id>", methods=["GET"])
