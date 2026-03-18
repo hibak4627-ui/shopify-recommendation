@@ -179,6 +179,6 @@ def recommendations(customer_id):
 # Lancement du serveur
 # -------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 8080))
     print(f"DEBUG: Démarrage du serveur Flask sur le port {port}")
     app.run(host="0.0.0.0", port=port)
