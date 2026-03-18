@@ -16,6 +16,16 @@ CORS(app)  # Autoriser toutes les origines (utile pour Shopify)
 print("DEBUG: Flask app starting...")
 
 # -------------------------
+# Ajouter les headers CORS après chaque réponse
+# -------------------------
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
+    return response
+
+# -------------------------
 # Connexion à PostgreSQL (Railway fournit DATABASE_URL)
 # -------------------------
 def get_conn():
@@ -32,7 +42,6 @@ def init_db():
     print("DEBUG: Initialisation DB...")
     conn = get_conn()
     cursor = conn.cursor()
-    # Création de la table des événements si elle n'existe pas
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS events (
         id SERIAL PRIMARY KEY,
@@ -58,7 +67,6 @@ def save_event(customer_id, event_type, product_id, query, event_data):
     print(f"DEBUG: save_event appelé avec customer_id={customer_id}, event_type={event_type}")
     conn = get_conn()
     cursor = conn.cursor()
-    # Insertion d'un nouvel événement dans la base
     cursor.execute("""
         INSERT INTO events (customer_id, event_type, product_id, query, event_data)
         VALUES (%s, %s, %s, %s, %s)
@@ -133,7 +141,6 @@ def recommendations(customer_id):
     print("DEBUG: /recommendations appelé pour customer_id =", customer_id)
     conn = get_conn()
     cursor = conn.cursor()
-    # Sélection des produits les plus cliqués par ce client
     cursor.execute("""
         SELECT product_id, COUNT(*) as clicks
         FROM events
