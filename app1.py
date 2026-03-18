@@ -50,6 +50,8 @@ def init_db():
         product_id TEXT,
         query TEXT,
         event_data JSONB,
+        page_url TEXT,
+        referrer TEXT,
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
@@ -63,14 +65,14 @@ init_db()
 # -------------------------
 # Fonction utilitaire pour sauvegarder les événements
 # -------------------------
-def save_event(customer_id, event_type, product_id, query, event_data):
+def save_event(customer_id, event_type, product_id, query, event_data, page_url=None, referrer=None, timestamp=None):
     print(f"DEBUG: save_event appelé avec customer_id={customer_id}, event_type={event_type}")
     conn = get_conn()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO events (customer_id, event_type, product_id, query, event_data)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (customer_id, event_type, product_id, query, json.dumps(event_data)))
+        INSERT INTO events (customer_id, event_type, product_id, query, event_data, page_url, referrer, timestamp)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (customer_id, event_type, product_id, query, json.dumps(event_data), page_url, referrer, timestamp))
     conn.commit()
     cursor.close()
     conn.close()
@@ -123,14 +125,32 @@ def customers_update():
 def track_search():
     data = request.json
     print("DEBUG: /events/search data =", data)
-    save_event(data.get("customer_id"), "search", None, data.get("query"), data)
+    save_event(
+        data.get("customer_id"),
+        "search",
+        None,
+        data.get("query"),
+        data,
+        page_url=data.get("page_url"),
+        referrer=data.get("referrer"),
+        timestamp=data.get("timestamp")
+    )
     return "Recherche enregistrée", 200
 
 @app.route("/events/click", methods=["POST"])
 def track_click():
     data = request.json
     print("DEBUG: /events/click data =", data)
-    save_event(data.get("customer_id"), "click", data.get("product_id"), None, data)
+    save_event(
+        data.get("customer_id"),
+        "click",
+        data.get("product_id"),
+        None,
+        data,
+        page_url=data.get("page_url"),
+        referrer=data.get("referrer"),
+        timestamp=data.get("timestamp")
+    )
     return "Clic enregistré", 200
 
 # -------------------------
