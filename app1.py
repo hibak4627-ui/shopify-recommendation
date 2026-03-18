@@ -65,11 +65,11 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
             INSERT INTO events (customer_id, event_type, product_id, query, event_data, page_url, referrer, timestamp)
             VALUES (%s, %s, %s, %s, %s, %s, %s, DEFAULT)
         """, (
-            customer_id,
-            event_type,
+            customer_id or "unknown",   # éviter None
+            event_type or "unknown",
             product_id,
             query,
-            Json(event_data or {}),   # éviter None
+            Json(event_data or {}),     # éviter None
             page_url,
             referrer
         ))
