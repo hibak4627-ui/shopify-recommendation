@@ -89,6 +89,8 @@ def ping():
 def track_search():
     data = request.json
     print("DEBUG: /events/search data =", data)
+    if not data:
+        return jsonify({"status": "error", "message": "request.json est vide"}), 400
     print("DEBUG: avant save_event")
     save_event(
         data.get("customer_id"),
@@ -106,6 +108,8 @@ def track_search():
 def track_click():
     data = request.json
     print("DEBUG: /events/click data =", data)
+    if not data:
+        return jsonify({"status": "error", "message": "request.json est vide"}), 400
     print("DEBUG: avant save_event")
     save_event(
         data.get("customer_id"),
