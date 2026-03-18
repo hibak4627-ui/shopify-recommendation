@@ -6,6 +6,7 @@ Created on Sun Mar 15 03:25:00 2026
 """
 import os
 import psycopg2
+import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from psycopg2.extras import Json
@@ -13,7 +14,9 @@ from psycopg2.extras import Json
 app = Flask(__name__)
 CORS(app)
 
-print("DEBUG: Flask app starting...")
+# إعداد logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 @app.after_request
 def add_cors_headers(response):
@@ -24,13 +27,13 @@ def add_cors_headers(response):
 
 def get_conn():
     db_url = os.environ.get("DATABASE_URL")
-    print("DEBUG: DATABASE_URL =", db_url)
+    logger.info(f"DATABASE_URL = {db_url}")
     if not db_url:
         raise Exception("DATABASE_URL n'est pas défini")
     return psycopg2.connect(db_url)
 
 def init_db():
-    print("DEBUG: Initialisation DB...")
+    logger.info("Initialisation DB...")
     conn = get_conn()
     cursor = conn.cursor()
     cursor.execute("""
@@ -49,16 +52,16 @@ def init_db():
     conn.commit()
     cursor.close()
     conn.close()
-    print("DEBUG: DB initialisée")
+    logger.info("DB initialisée")
 
 try:
     init_db()
 except Exception as e:
-    print("ERROR init_db:", str(e))
+    logger.error(f"ERROR init_db: {str(e)}")
 
 def save_event(customer_id, event_type, product_id, query, event_data, page_url=None, referrer=None):
-    print(f"DEBUG: save_event appelé avec customer_id={customer_id}, event_type={event_type}")
-    print("DEBUG event_data =", event_data)
+    logger.info(f"save_event appelé avec customer_id={customer_id}, event_type={event_type}")
+    logger.debug(f"event_data = {event_data}")
     try:
         conn = get_conn()
         cursor = conn.cursor()
@@ -77,9 +80,9 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
         conn.commit()
         cursor.close()
         conn.close()
-        print("DEBUG: Event sauvegardé")
+        logger.info("Event sauvegardé")
     except Exception as e:
-        print("ERROR in save_event:", str(e))
+        logger.error(f"ERROR in save_event: {str(e)}")
 
 @app.route("/ping", methods=["GET"])
 def ping():
@@ -88,10 +91,9 @@ def ping():
 @app.route("/events/search", methods=["POST"])
 def track_search():
     data = request.json
-    print("DEBUG: /events/search data =", data)
+    logger.info(f"/events/search data = {data}")
     if not data:
         return jsonify({"status": "error", "message": "request.json est vide"}), 400
-    print("DEBUG: avant save_event")
     save_event(
         data.get("customer_id"),
         "search",
@@ -101,16 +103,14 @@ def track_search():
         page_url=data.get("page_url"),
         referrer=data.get("referrer")
     )
-    print("DEBUG: après save_event")
     return "Recherche enregistrée", 200
 
 @app.route("/events/click", methods=["POST"])
 def track_click():
     data = request.json
-    print("DEBUG: /events/click data =", data)
+    logger.info(f"/events/click data = {data}")
     if not data:
         return jsonify({"status": "error", "message": "request.json est vide"}), 400
-    print("DEBUG: avant save_event")
     save_event(
         data.get("customer_id"),
         "click",
@@ -120,12 +120,11 @@ def track_click():
         page_url=data.get("page_url"),
         referrer=data.get("referrer")
     )
-    print("DEBUG: après save_event")
     return "Clic enregistré", 200
 
 @app.route("/recommendations/<customer_id>", methods=["GET"])
 def recommendations(customer_id):
-    print("DEBUG: /recommendations appelé pour customer_id =", customer_id)
+    logger.info(f"/recommendations appelé pour customer_id = {customer_id}")
     conn = get_conn()
     cursor = conn.cursor()
     cursor.execute("""
@@ -139,10 +138,10 @@ def recommendations(customer_id):
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    print("DEBUG: Résultat recommandations =", rows)
+    logger.info(f"Résultat recommandations = {rows}")
     return jsonify(rows)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    print(f"DEBUG: Démarrage du serveur Flask sur le port {port}")
+    logger.info(f"Démarrage du serveur Flask sur le port {port}")
     app.run(host="0.0.0.0", port=port)
