@@ -68,7 +68,7 @@ except Exception as e:
 # -------------------------
 # Fonction utilitaire pour sauvegarder les événements (version sécurisée)
 # -------------------------
-def save_event(customer_id, event_type, product_id, query, event_data, page_url=None, referrer=None, timestamp=None):
+def save_event(customer_id, event_type, product_id, query, event_data, page_url=None, referrer=None):
     print(f"DEBUG: save_event appelé avec customer_id={customer_id}, event_type={event_type}")
     try:
         conn = get_conn()
