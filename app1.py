@@ -8,7 +8,7 @@ import os
 import psycopg2
 import json
 from flask import Flask, request, jsonify
-from flask_cors import CORS 
+from flask_cors import CORS
 from psycopg2.extras import Json
 
 app = Flask(__name__)
@@ -67,10 +67,8 @@ except Exception as e:
     print("ERROR init_db:", str(e))
 
 # -------------------------
-# Fonction utilitaire pour sauvegarder les événements (version sécurisée)
+# Fonction utilitaire pour sauvegarder les événements
 # -------------------------
-
-
 def save_event(customer_id, event_type, product_id, query, event_data, page_url=None, referrer=None):
     print(f"DEBUG: save_event appelé avec customer_id={customer_id}, event_type={event_type}")
     try:
@@ -84,7 +82,7 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
             event_type,
             product_id,
             query,
-            Json(event_data),   #ـ JSONB
+            Json(event_data),   # Conversion directe en JSONB
             page_url,
             referrer
         ))
@@ -95,6 +93,7 @@ def save_event(customer_id, event_type, product_id, query, event_data, page_url=
     except Exception as e:
         print("ERROR in save_event:", str(e))
 
+# -------------------------
 # Webhooks Shopify
 # -------------------------
 @app.route("/ping", methods=["GET"])
@@ -152,8 +151,7 @@ def track_search():
         data.get("query"),
         data,
         page_url=data.get("page_url"),
-        referrer=data.get("referrer"),
-        timestamp=None  # laisser None pour éviter erreurs
+        referrer=data.get("referrer")
     )
     return "Recherche enregistrée", 200
 
@@ -168,8 +166,7 @@ def track_click():
         None,
         data,
         page_url=data.get("page_url"),
-        referrer=data.get("referrer"),
-        timestamp=None  # laisser None
+        referrer=data.get("referrer")
     )
     return "Clic enregistré", 200
 
