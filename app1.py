@@ -12,7 +12,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# إعداد logging
+#  logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ def save_event(customer_id, event_type, query=None, product_id=None):
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO events (customer_id, event_type, query, product_id, timestamp)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO events (id, customer_id, event_type, product_id, query, timestamp)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, (
             customer_id if customer_id else "unknown",
             event_type if event_type else "unknown",
