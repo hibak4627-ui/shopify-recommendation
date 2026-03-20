@@ -9,15 +9,17 @@ import psycopg2
 import logging
 from flask import Flask, request, jsonify
 from datetime import datetime
+from flask_cors import CORS   # جديد
 
 app = Flask(__name__)
+CORS(app, resources={r"/events/*": {"origins": "https://modestyle-8979.myshopify.com"}})  # جديد
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-def save_event(customer_id, event_type, query=None, product_id=None,  timestamp=None, page_url=None, referrer=None):
+def save_event(customer_id, event_type, query=None, product_id=None, timestamp=None, page_url=None, referrer=None):
     logger.info(f"save_event appelé avec customer_id={customer_id}, event_type={event_type}")
     try:
         conn = psycopg2.connect(DATABASE_URL)
@@ -33,7 +35,7 @@ def save_event(customer_id, event_type, query=None, product_id=None,  timestamp=
             logger.error("Le tableau 'events' n'existe pas dans cette base.")
             return
         cursor.execute("""
-            INSERT INTO events (customer_id, event_type, product_id, query, timestamp,  page_url, referrer)
+            INSERT INTO events (customer_id, event_type, product_id, query, timestamp, page_url, referrer)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (
             customer_id if customer_id else "unknown",
@@ -92,4 +94,4 @@ def track_click():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     logger.info(f"Démarrage du serveur Flask sur le port {port}")
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port)   # مصححة
