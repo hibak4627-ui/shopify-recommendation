@@ -117,6 +117,11 @@ def track_click():
         referrer=data.get("referrer")
     )
     return jsonify({"status": "success", "event_type": "click"}), 200
+@app.before_request
+def log_request_info():
+    logger.info(f"Requête reçue: {request.method} {request.url}")
+    logger.info(f"Headers: {request.headers}")
+    logger.info(f"Body brut: {request.get_data()}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
