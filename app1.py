@@ -33,16 +33,16 @@ def save_event(customer_id, event_type, query=None, product_id=None,  timestamp=
             logger.error("Le tableau 'events' n'existe pas dans cette base.")
             return
         cursor.execute("""
-            INSERT INTO events (customer_id, event_type, product_id, query, page_url, referrer, timestamp)
+            INSERT INTO events (customer_id, event_type, product_id, query, timestamp,  page_url, referrer)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (
             customer_id if customer_id else "unknown",
             event_type if event_type else "unknown",
             product_id,
             query,
+            timestamp or datetime.utcnow(),
             page_url,
-            referrer,
-            timestamp or datetime.utcnow()
+            referrer
         ))
         conn.commit()
         cursor.close()
@@ -66,9 +66,9 @@ def track_search():
         "search",
         query=data.get("query"),
         product_id=None,
+        timestamp=data.get("timestamp"),
         page_url=data.get("page_url"),
-        referrer=data.get("referrer"),
-        timestamp=data.get("timestamp")
+        referrer=data.get("referrer")
     )
     return jsonify({"status": "success", "event_type": "search"}), 200
 
@@ -83,9 +83,9 @@ def track_click():
         "click",
         query=None,
         product_id=data.get("product_id"),
+        timestamp=data.get("timestamp"),
         page_url=data.get("page_url"),
-        referrer=data.get("referrer"),
-        timestamp=data.get("timestamp")
+        referrer=data.get("referrer")
     )
     return jsonify({"status": "success", "event_type": "click"}), 200
 
