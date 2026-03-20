@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-def save_event(customer_id, event_type, query=None, product_id=None, page_url=None, referrer=None, timestamp=None):
+def save_event(customer_id, event_type, query=None, product_id=None,  timestamp=None, page_url=None, referrer=None):
     logger.info(f"save_event appelé avec customer_id={customer_id}, event_type={event_type}")
     try:
         conn = psycopg2.connect(DATABASE_URL)
