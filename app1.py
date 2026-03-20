@@ -9,21 +9,24 @@ import psycopg2
 import logging
 from flask import Flask, request, jsonify
 from datetime import datetime
-from flask_cors import CORS   # جديد
+from flask_cors import CORS 
 
 app = Flask(__name__)
-CORS(app, resources={r"/events/*": {"origins": "https://modestyle-8979.myshopify.com"}})  # جديد
+CORS(app, resources={r"/events/*": {"origins": "https://modestyle-8979.myshopify.com"}})  
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
+logger.info(f"DATABASE_URL utilisé: {DATABASE_URL}")
 
 def save_event(customer_id, event_type, query=None, product_id=None, timestamp=None, page_url=None, referrer=None):
     logger.info(f"save_event appelé avec customer_id={customer_id}, event_type={event_type}")
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
+        
+        # Vérifier si la table existe
         cursor.execute("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
@@ -34,6 +37,18 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
         if not exists:
             logger.error("Le tableau 'events' n'existe pas dans cette base.")
             return
+        
+        # Log des valeurs avant INSERT
+        logger.info("Tentative INSERT avec valeurs: %s", (
+            customer_id if customer_id else "unknown",
+            event_type if event_type else "unknown",
+            product_id,
+            query,
+            timestamp or datetime.utcnow(),
+            page_url,
+            referrer
+        ))
+        
         cursor.execute("""
             INSERT INTO events (customer_id, event_type, product_id, query, timestamp, page_url, referrer)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -46,6 +61,7 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
             page_url,
             referrer
         ))
+        
         conn.commit()
         cursor.close()
         conn.close()
@@ -94,4 +110,4 @@ def track_click():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     logger.info(f"Démarrage du serveur Flask sur le port {port}")
-    app.run(host="0.0.0.0", port=port)   # مصححة
+    app.run(host="0.0.0.0", port=port)
