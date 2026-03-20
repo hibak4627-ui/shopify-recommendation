@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-def save_event(customer_id, event_type, query=None, product_id=None):
+def save_event(customer_id, event_type, query=None, product_id=None, page_url=None, referrer=None, timestamp=None):
     logger.info(f"save_event appelé avec customer_id={customer_id}, event_type={event_type}")
     try:
         conn = psycopg2.connect(DATABASE_URL)
@@ -33,14 +33,16 @@ def save_event(customer_id, event_type, query=None, product_id=None):
             logger.error("Le tableau 'events' n'existe pas dans cette base.")
             return
         cursor.execute("""
-            INSERT INTO events (customer_id, event_type, product_id, query, timestamp)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO events (customer_id, event_type, product_id, query, page_url, referrer, timestamp)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (
             customer_id if customer_id else "unknown",
             event_type if event_type else "unknown",
             product_id,
             query,
-            datetime.utcnow()
+            page_url,
+            referrer,
+            timestamp or datetime.utcnow()
         ))
         conn.commit()
         cursor.close()
@@ -63,9 +65,12 @@ def track_search():
         data.get("customer_id"),
         "search",
         query=data.get("query"),
-        product_id=None
+        product_id=None,
+        page_url=data.get("page_url"),
+        referrer=data.get("referrer"),
+        timestamp=data.get("timestamp")
     )
-    return "Recherche enregistrée", 200
+    return jsonify({"status": "success", "event_type": "search"}), 200
 
 @app.route("/events/click", methods=["POST"])
 def track_click():
@@ -77,9 +82,12 @@ def track_click():
         data.get("customer_id"),
         "click",
         query=None,
-        product_id=data.get("product_id")
+        product_id=data.get("product_id"),
+        page_url=data.get("page_url"),
+        referrer=data.get("referrer"),
+        timestamp=data.get("timestamp")
     )
-    return "Clic enregistré", 200
+    return jsonify({"status": "success", "event_type": "click"}), 200
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
