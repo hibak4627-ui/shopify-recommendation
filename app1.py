@@ -26,7 +26,6 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
 
-        # Vérifier si la table existe
         cursor.execute("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
@@ -38,7 +37,6 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
             logger.error("Le tableau 'events' n'existe pas dans cette base.")
             return
 
-        # Log des valeurs avant INSERT
         logger.info("Tentative INSERT avec valeurs: %s", (
             customer_id if customer_id else "unknown",
             event_type if event_type else "unknown",
@@ -64,12 +62,10 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
 
         conn.commit()
 
-        # ✅ afficher le nombre d'événements après insertion
         cursor.execute("SELECT COUNT(*) FROM events;")
         count = cursor.fetchone()[0]
         logger.info(f"Nombre total d'événements dans la base: {count}")
 
-        # ✅ afficher le dernier événement inséré
         cursor.execute("SELECT * FROM events ORDER BY id DESC LIMIT 1;")
         last_event = cursor.fetchone()
         logger.info(f"Dernier événement inséré: {last_event}")
@@ -87,9 +83,12 @@ def ping():
 @app.route("/events/search", methods=["POST"])
 def track_search():
     data = request.json
-    logger.info(f"/events/search data = {data}")
+    logger.info("/events/search appelé")
+    logger.info(f"Données reçues: {data}")
     if not data:
+        logger.error("request.json est vide")
         return jsonify({"status": "error", "message": "request.json est vide"}), 400
+    logger.info("Appel de save_event depuis /events/search")
     save_event(
         data.get("customer_id"),
         "search",
@@ -104,9 +103,12 @@ def track_search():
 @app.route("/events/click", methods=["POST"])
 def track_click():
     data = request.json
-    logger.info(f"/events/click data = {data}")
+    logger.info("/events/click appelé")
+    logger.info(f"Données reçues: {data}")
     if not data:
+        logger.error("request.json est vide")
         return jsonify({"status": "error", "message": "request.json est vide"}), 400
+    logger.info("Appel de save_event depuis /events/click")
     save_event(
         data.get("customer_id"),
         "click",
@@ -117,6 +119,7 @@ def track_click():
         referrer=data.get("referrer")
     )
     return jsonify({"status": "success", "event_type": "click"}), 200
+
 @app.before_request
 def log_request_info():
     logger.info(f"Requête reçue: {request.method} {request.url}")
