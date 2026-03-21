@@ -15,7 +15,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/events/*": {"origins": "*"}})
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(app1)
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 logger.info(f"DATABASE_URL utilisé: {DATABASE_URL}")
