@@ -21,6 +21,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 logger.info(f"DATABASE_URL utilisé: {DATABASE_URL}")
 
 def save_event(customer_id, event_type, query=None, product_id=None, timestamp=None, page_url=None, referrer=None):
+    print(">>> save_event CALLED <<<")  
     logger.info(f"save_event appelé avec customer_id={customer_id}, event_type={event_type}")
     try:
         conn = psycopg2.connect(DATABASE_URL)
@@ -34,9 +35,11 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
         """)
         exists = cursor.fetchone()[0]
         if not exists:
+            print(">>> TABLE 'events' NOT FOUND <<<")
             logger.error("Le tableau 'events' n'existe pas dans cette base.")
             return
 
+        print(">>> Tentative INSERT <<<")
         logger.info("Tentative INSERT avec valeurs: %s", (
             customer_id if customer_id else "unknown",
             event_type if event_type else "unknown",
@@ -61,19 +64,24 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
         ))
 
         conn.commit()
+        print(">>> INSERT DONE <<<")
 
         cursor.execute("SELECT COUNT(*) FROM events;")
         count = cursor.fetchone()[0]
+        print(f">>> Nombre total d'événements: {count}")
         logger.info(f"Nombre total d'événements dans la base: {count}")
 
         cursor.execute("SELECT * FROM events ORDER BY id DESC LIMIT 1;")
         last_event = cursor.fetchone()
+        print(f">>> Dernier événement inséré: {last_event}")
         logger.info(f"Dernier événement inséré: {last_event}")
 
         cursor.close()
         conn.close()
+        print(">>> Event sauvegardé <<<")
         logger.info("Event sauvegardé dans la base")
     except Exception as e:
+        print(f">>> ERROR in save_event: {str(e)}")
         logger.error(f"Erreur dans save_event: {str(e)}")
 
 @app.route("/ping", methods=["GET"])
