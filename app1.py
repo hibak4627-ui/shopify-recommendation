@@ -12,7 +12,7 @@ from datetime import datetime
 from flask_cors import CORS 
 
 app = Flask(__name__)
-CORS(app, resources={r"/events/*": {"origins": "https://modestyle-8979.myshopify.com"}})  
+CORS(app, resources={r"/events/*": {"origins": "*"}})
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
