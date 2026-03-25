@@ -18,9 +18,11 @@ logger = logging.getLogger(__name__)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def save_event(customer_id, event_type, query=None, product_id=None, page_url=None, referrer=None):
-    logger.info(f"save_event appelé avec customer_id={customer_id}, event_type={event_type}")
+    logger.info(f"save_event appelé avec customer_id={customer_id}, event_type={event_type}, query={query}, product_id={product_id}, page_url={page_url}, referrer={referrer}")
     try:
+        logger.info("Tentative de connexion à la base...")
         conn = psycopg2.connect(DATABASE_URL)
+        logger.info("Connexion réussie.")
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO events (customer_id, event_type, product_id, query, timestamp, page_url, referrer)
