@@ -21,8 +21,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 logger.info(f"DATABASE_URL utilisé: {DATABASE_URL}")
 
 def save_event(customer_id, event_type, query=None, product_id=None, timestamp=None, page_url=None, referrer=None):
-    print(">>> save_event CALLED <<<")  
-    logger.info(f"save_event appelé avec customer_id={customer_id}, event_type={event_type}")
+    print(">>> save_event CALLED <<<")  # للتأكد أن الدالة تنادات
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
@@ -36,20 +35,9 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
         exists = cursor.fetchone()[0]
         if not exists:
             print(">>> TABLE 'events' NOT FOUND <<<")
-            logger.error("Le tableau 'events' n'existe pas dans cette base.")
             return
 
         print(">>> Tentative INSERT <<<")
-        logger.info("Tentative INSERT avec valeurs: %s", (
-            customer_id if customer_id else "unknown",
-            event_type if event_type else "unknown",
-            product_id,
-            query,
-            timestamp or datetime.utcnow(),
-            page_url,
-            referrer
-        ))
-
         cursor.execute("""
             INSERT INTO events (customer_id, event_type, product_id, query, timestamp, page_url, referrer)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -66,23 +54,11 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
         conn.commit()
         print(">>> INSERT DONE <<<")
 
-        cursor.execute("SELECT COUNT(*) FROM events;")
-        count = cursor.fetchone()[0]
-        print(f">>> Nombre total d'événements: {count}")
-        logger.info(f"Nombre total d'événements dans la base: {count}")
-
-        cursor.execute("SELECT * FROM events ORDER BY id DESC LIMIT 1;")
-        last_event = cursor.fetchone()
-        print(f">>> Dernier événement inséré: {last_event}")
-        logger.info(f"Dernier événement inséré: {last_event}")
-
         cursor.close()
         conn.close()
         print(">>> Event sauvegardé <<<")
-        logger.info("Event sauvegardé dans la base")
     except Exception as e:
         print(f">>> ERROR in save_event: {str(e)}")
-        logger.error(f"Erreur dans save_event: {str(e)}")
 
 @app.route("/ping", methods=["GET"])
 def ping():
@@ -91,12 +67,12 @@ def ping():
 @app.route("/events/search", methods=["POST"])
 def track_search():
     data = request.json
-    logger.info("/events/search appelé")
-    logger.info(f"Données reçues: {data}")
+    print(">>> /events/search CALLED <<<")
+    print(f">>> DATA: {data}")
     if not data:
-        logger.error("request.json est vide")
+        print(">>> request.json est vide <<<")
         return jsonify({"status": "error", "message": "request.json est vide"}), 400
-    logger.info("Appel de save_event depuis /events/search")
+    print(">>> Calling save_event <<<")
     save_event(
         data.get("customer_id"),
         "search",
@@ -111,12 +87,12 @@ def track_search():
 @app.route("/events/click", methods=["POST"])
 def track_click():
     data = request.json
-    logger.info("/events/click appelé")
-    logger.info(f"Données reçues: {data}")
+    print(">>> /events/click CALLED <<<")
+    print(f">>> DATA: {data}")
     if not data:
-        logger.error("request.json est vide")
+        print(">>> request.json est vide <<<")
         return jsonify({"status": "error", "message": "request.json est vide"}), 400
-    logger.info("Appel de save_event depuis /events/click")
+    print(">>> Calling save_event <<<")
     save_event(
         data.get("customer_id"),
         "click",
