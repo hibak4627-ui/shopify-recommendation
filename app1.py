@@ -23,16 +23,6 @@ def save_event(customer_id, event_type, query=None, product_id=None, page_url=No
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables 
-                WHERE table_name = 'events'
-            );
-        """)
-        exists = cursor.fetchone()[0]
-        if not exists:
-            logger.error("Le tableau 'events' n'existe pas dans cette base.")
-            return
-        cursor.execute("""
             INSERT INTO events (customer_id, event_type, product_id, query, timestamp, page_url, referrer)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (
@@ -47,21 +37,25 @@ def save_event(customer_id, event_type, query=None, product_id=None, page_url=No
         conn.commit()
         cursor.close()
         conn.close()
-        logger.info("Event sauvegardé dans la base")
+        logger.info(">>> INSERT DONE <<<")
+        return True
     except Exception as e:
         logger.error(f"Erreur dans save_event: {str(e)}")
+        return False
 
+# --- Route de test ---
 @app.route("/ping", methods=["GET"])
 def ping():
     return "pong", 200
 
+# --- Routes front-end (search / click) ---
 @app.route("/events/search", methods=["POST"])
 def track_search():
     data = request.json
     logger.info(f"/events/search data = {data}")
     if not data:
         return jsonify({"status": "error", "message": "request.json est vide"}), 400
-    save_event(
+    ok = save_event(
         data.get("customer_id"),
         "search",
         query=data.get("query"),
@@ -69,7 +63,7 @@ def track_search():
         page_url=data.get("page_url"),
         referrer=data.get("referrer")
     )
-    return "Recherche enregistrée", 200
+    return jsonify({"status": "success" if ok else "error"}), 200 if ok else 500
 
 @app.route("/events/click", methods=["POST"])
 def track_click():
@@ -77,7 +71,7 @@ def track_click():
     logger.info(f"/events/click data = {data}")
     if not data:
         return jsonify({"status": "error", "message": "request.json est vide"}), 400
-    save_event(
+    ok = save_event(
         data.get("customer_id"),
         "click",
         query=None,
@@ -85,7 +79,48 @@ def track_click():
         page_url=data.get("page_url"),
         referrer=data.get("referrer")
     )
-    return "Clic enregistré", 200
+    return jsonify({"status": "success" if ok else "error"}), 200 if ok else 500
+
+# --- Routes webhooks Shopify ---
+@app.route("/orders/create", methods=["POST"])
+def order_created():
+    data = request.json
+    logger.info(f"Webhook order_created data = {data}")
+    ok = save_event(
+        data.get("customer", {}).get("id"),
+        "order_created"
+    )
+    return jsonify({"status": "success" if ok else "error"}), 200 if ok else 500
+
+@app.route("/carts/update", methods=["POST"])
+def cart_updated():
+    data = request.json
+    logger.info(f"Webhook cart_updated data = {data}")
+    ok = save_event(
+        data.get("customer_id"),
+        "cart_updated"
+    )
+    return jsonify({"status": "success" if ok else "error"}), 200 if ok else 500
+
+@app.route("/checkouts/create", methods=["POST"])
+def checkout_created():
+    data = request.json
+    logger.info(f"Webhook checkout_created data = {data}")
+    ok = save_event(
+        data.get("customer_id"),
+        "checkout_created"
+    )
+    return jsonify({"status": "success" if ok else "error"}), 200 if ok else 500
+
+@app.route("/customers/update", methods=["POST"])
+def customer_updated():
+    data = request.json
+    logger.info(f"Webhook customer_updated data = {data}")
+    ok = save_event(
+        data.get("id"),
+        "customer_updated"
+    )
+    return jsonify({"status": "success" if ok else "error"}), 200 if ok else 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
