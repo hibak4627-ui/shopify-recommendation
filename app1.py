@@ -9,6 +9,7 @@ import psycopg2
 import logging
 from flask import Flask, request, jsonify
 from datetime import datetime
+import urllib.parse as urlparse
 
 app = Flask(__name__)
 
@@ -21,8 +22,18 @@ def save_event(customer_id, event_type, query=None, product_id=None, page_url=No
     logger.info(f"save_event appelé avec customer_id={customer_id}, event_type={event_type}, query={query}, product_id={product_id}, page_url={page_url}, referrer={referrer}")
     try:
         logger.info("Tentative de connexion à la base...")
-        # ✅ نزيد sslmode=require باش الاتصال مع Railway يكون آمن
-        conn = psycopg2.connect(DATABASE_URL, sslmode="require")
+
+        # ✅ نفكّك الـ DATABASE_URL ونمرر القيم وحدة وحدة
+        url = urlparse.urlparse(DATABASE_URL)
+        conn = psycopg2.connect(
+            dbname=url.path[1:],   # اسم قاعدة البيانات
+            user=url.username,     # اسم المستخدم
+            password=url.password, # كلمة المرور
+            host=url.hostname,     # المضيف
+            port=url.port,         # البورت
+            sslmode="require"      # نزيد SSL
+        )
+
         logger.info("Connexion réussie.")
         cursor = conn.cursor()
         cursor.execute("""
