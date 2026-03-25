@@ -18,6 +18,12 @@ logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
+# ✅ نتحقق واش DATABASE_URL موجود
+if not DATABASE_URL:
+    logger.error("DATABASE_URL est vide ou non défini !")
+else:
+    logger.info(f"DATABASE_URL chargé: {DATABASE_URL}")
+
 def save_event(customer_id, event_type, query=None, product_id=None, page_url=None, referrer=None):
     logger.info(f"save_event appelé avec customer_id={customer_id}, event_type={event_type}, query={query}, product_id={product_id}, page_url={page_url}, referrer={referrer}")
     try:
