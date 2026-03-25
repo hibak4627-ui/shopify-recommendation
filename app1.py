@@ -21,7 +21,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 logger.info(f"DATABASE_URL utilisé: {DATABASE_URL}")
 
 def save_event(customer_id, event_type, query=None, product_id=None, timestamp=None, page_url=None, referrer=None):
-    print(">>> save_event CALLED <<<")   # للتأكد أن الدالة تنادات
+    logger.info(">>> save_event CALLED <<<")
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
@@ -34,10 +34,10 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
         """)
         exists = cursor.fetchone()[0]
         if not exists:
-            print(">>> TABLE 'events' NOT FOUND <<<")
+            logger.error(">>> TABLE 'events' NOT FOUND <<<")
             return
 
-        print(">>> Tentative INSERT <<<")
+        logger.info(">>> Tentative INSERT <<<")
         cursor.execute("""
             INSERT INTO events (customer_id, event_type, product_id, query, timestamp, page_url, referrer)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -52,13 +52,13 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
         ))
 
         conn.commit()
-        print(">>> INSERT DONE <<<")
+        logger.info(">>> INSERT DONE <<<")
 
         cursor.close()
         conn.close()
-        print(">>> Event sauvegardé <<<")
+        logger.info(">>> Event sauvegardé <<<")
     except Exception as e:
-        print(f">>> ERROR in save_event: {str(e)}")
+        logger.error(f">>> ERROR in save_event: {str(e)}")
 
 @app.route("/ping", methods=["GET"])
 def ping():
@@ -67,12 +67,12 @@ def ping():
 @app.route("/events/search", methods=["POST"])
 def track_search():
     data = request.json
-    print(">>> /events/search CALLED <<<")
-    print(f">>> DATA: {data}")
+    logger.info(">>> /events/search CALLED <<<")
+    logger.info(f">>> DATA: {data}")
     if not data:
-        print(">>> request.json est vide <<<")
+        logger.error(">>> request.json est vide <<<")
         return jsonify({"status": "error", "message": "request.json est vide"}), 400
-    print(">>> Calling save_event <<<")
+    logger.info(">>> Calling save_event <<<")
     save_event(
         data.get("customer_id"),
         "search",
@@ -87,12 +87,12 @@ def track_search():
 @app.route("/events/click", methods=["POST"])
 def track_click():
     data = request.json
-    print(">>> /events/click CALLED <<<")
-    print(f">>> DATA: {data}")
+    logger.info(">>> /events/click CALLED <<<")
+    logger.info(f">>> DATA: {data}")
     if not data:
-        print(">>> request.json est vide <<<")
+        logger.error(">>> request.json est vide <<<")
         return jsonify({"status": "error", "message": "request.json est vide"}), 400
-    print(">>> Calling save_event <<<")
+    logger.info(">>> Calling save_event <<<")
     save_event(
         data.get("customer_id"),
         "click",
