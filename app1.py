@@ -112,4 +112,5 @@ def log_request_info():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    logger.info(f"Démarrage du serveur Flask
+    logger.info(f"Démarrage du serveur Flask sur le port {port}")
+    app.run(host="0.0.0.0", port=port)
