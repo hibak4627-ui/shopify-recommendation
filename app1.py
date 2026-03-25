@@ -9,7 +9,7 @@ import psycopg2
 import logging
 from flask import Flask, request, jsonify
 from datetime import datetime
-from flask_cors import CORS
+from flask_cors import CORS 
 
 app = Flask(__name__)
 CORS(app, resources={r"/events/*": {"origins": "*"}})
@@ -21,7 +21,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 logger.info(f"DATABASE_URL utilisé: {DATABASE_URL}")
 
 def save_event(customer_id, event_type, query=None, product_id=None, timestamp=None, page_url=None, referrer=None):
-    print(">>> save_event CALLED <<<")  # للتأكد أن الدالة تنادات
+    print(">>> save_event CALLED <<<")   # للتأكد أن الدالة تنادات
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
@@ -112,5 +112,4 @@ def log_request_info():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    logger.info(f"Démarrage du serveur Flask sur le port {port}")
-    app.run(host="0.0.0.0", port=port)
+    logger.info(f"Démarrage du serveur Flask
