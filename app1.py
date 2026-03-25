@@ -21,7 +21,8 @@ def save_event(customer_id, event_type, query=None, product_id=None, page_url=No
     logger.info(f"save_event appelé avec customer_id={customer_id}, event_type={event_type}, query={query}, product_id={product_id}, page_url={page_url}, referrer={referrer}")
     try:
         logger.info("Tentative de connexion à la base...")
-        conn = psycopg2.connect(DATABASE_URL)
+        # ✅ نزيد sslmode=require باش الاتصال مع Railway يكون آمن
+        conn = psycopg2.connect(DATABASE_URL, sslmode="require")
         logger.info("Connexion réussie.")
         cursor = conn.cursor()
         cursor.execute("""
