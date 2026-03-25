@@ -14,14 +14,15 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, resources={r"/events/*": {"origins": "*"}})
 
-logging.basicConfig(level=logging.INFO)
+# نرفع مستوى الـ logging باش يبان كلشي
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("app1")
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
-logger.info(f"DATABASE_URL utilisé: {DATABASE_URL}")
+logger.debug(f"DATABASE_URL utilisé: {DATABASE_URL}")
 
 def save_event(customer_id, event_type, query=None, product_id=None, timestamp=None, page_url=None, referrer=None):
-    logger.info(">>> save_event CALLED <<<")
+    logger.debug(">>> save_event CALLED <<<")
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
@@ -37,7 +38,7 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
             logger.error(">>> TABLE 'events' NOT FOUND <<<")
             return
 
-        logger.info(">>> Tentative INSERT <<<")
+        logger.debug(">>> Tentative INSERT <<<")
         cursor.execute("""
             INSERT INTO events (customer_id, event_type, product_id, query, timestamp, page_url, referrer)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -52,11 +53,12 @@ def save_event(customer_id, event_type, query=None, product_id=None, timestamp=N
         ))
 
         conn.commit()
-        logger.info(">>> INSERT DONE <<<")
+        logger.debug(">>> INSERT DONE <<<")
+        logger.error(">>> TEST LOG: INSERT attempted <<<")  # باش يبان فالـ logs أكيد
 
         cursor.close()
         conn.close()
-        logger.info(">>> Event sauvegardé <<<")
+        logger.debug(">>> Event sauvegardé <<<")
     except Exception as e:
         logger.error(f">>> ERROR in save_event: {str(e)}")
 
@@ -67,12 +69,12 @@ def ping():
 @app.route("/events/search", methods=["POST"])
 def track_search():
     data = request.json
-    logger.info(">>> /events/search CALLED <<<")
-    logger.info(f">>> DATA: {data}")
+    logger.debug(">>> /events/search CALLED <<<")
+    logger.debug(f">>> DATA: {data}")
     if not data:
         logger.error(">>> request.json est vide <<<")
         return jsonify({"status": "error", "message": "request.json est vide"}), 400
-    logger.info(">>> Calling save_event <<<")
+    logger.debug(">>> Calling save_event <<<")
     save_event(
         data.get("customer_id"),
         "search",
@@ -87,12 +89,12 @@ def track_search():
 @app.route("/events/click", methods=["POST"])
 def track_click():
     data = request.json
-    logger.info(">>> /events/click CALLED <<<")
-    logger.info(f">>> DATA: {data}")
+    logger.debug(">>> /events/click CALLED <<<")
+    logger.debug(f">>> DATA: {data}")
     if not data:
         logger.error(">>> request.json est vide <<<")
         return jsonify({"status": "error", "message": "request.json est vide"}), 400
-    logger.info(">>> Calling save_event <<<")
+    logger.debug(">>> Calling save_event <<<")
     save_event(
         data.get("customer_id"),
         "click",
@@ -106,11 +108,11 @@ def track_click():
 
 @app.before_request
 def log_request_info():
-    logger.info(f"Requête reçue: {request.method} {request.url}")
-    logger.info(f"Headers: {request.headers}")
-    logger.info(f"Body brut: {request.get_data()}")
+    logger.debug(f"Requête reçue: {request.method} {request.url}")
+    logger.debug(f"Headers: {request.headers}")
+    logger.debug(f"Body brut: {request.get_data()}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    logger.info(f"Démarrage du serveur Flask sur le port {port}")
+    logger.debug(f"Démarrage du serveur Flask sur le port {port}")
     app.run(host="0.0.0.0", port=port)
